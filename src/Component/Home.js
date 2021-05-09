@@ -1,72 +1,121 @@
 import React, { Component } from 'react'
-import { View, StyleSheet, Image, Text } from 'react-native'
-import { connect } from 'react-redux'
+import { Text, View, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, TextInput, Alert, StatusBar } from 'react-native'
+import axios from 'axios';
 
-import { GambarReducer } from '../Redux/Action'
-
-class Home extends Component {
+export class Home extends Component {
     constructor(props) {
-        super(props)
+        super(props);
+        // Don't call this.setState() here!
+        this.state = { 
+          data: [],
+          namaBuku:""
+        };
+
+      }
+
+  componentDidMount(){
+     this.getData();
+  }
+  
+  componentDidUpdate(){
+      this.getData();
     }
 
-    gambarCheck() {
-        if (document.getElementById("imgClick").source === '../thumb_up.jpg') {
-            for (let x = 0; x < this.props.dataGambar; x++) {
-                for (let y = 0; y < this.props.dataGambar; y++) {
-                }
-            }
-            return (
-                <View>
-                    <Image id="imgClick" onclick={this.gambarCheck.bind(this)} source={require('../thumb_down.jpg')} />
-                </View>
-            )            
-        } else {
-            
-            document.getElementById("imgClick").source = '../thumb_up.jpg'
-        }
-    }
+  getData = () => {
+    axios.get('http://192.168.43.215:8080/buku/get')
+            .then( (response) => {
+              // console.log(response.data)
+              let data = response.data;
+              this.setState({ data: data })      
+            })
+                    .catch(function (error) {
+                    console.log(error)
+                    })
+  }
+
+  cariData = () => {
+    axios.get(`http://192.168.43.215:8080/buku/search/${this.state.namaBuku}`)
+            .then( (response) => {
+              // console.log(response.data)
+              let data = response.data;
+              this.setState({ data: data })      
+            })
+                    .catch(function (error) {
+                    console.log(error)
+                    })
+  }
+  
+  deleteData(id) {
+    axios.delete(`http://192.168.43.215:8080/buku/delete/${id}`)
+    .then( (response) => {
+              alert(response.data)
+              // let data = response.data;
+              // this.setState({ data: data })      
+            })
+                    .catch(function (error) {
+                    console.log(error)
+                    })
+  }
+    
+    // Item = ({ title }) => (
+    //     <View style={styles.item}>
+    //         <Text style={styles.title}>{title}</Text>
+    //     </View>
+    // )
+
+  renderItem = ({ item }) => (
+    <View  style = {{borderWidth:5, borderColor:"red"}}>
+      <Text style={styles.title}>Judul Buku : {item.judulBuku} </Text>
+      <Text style={styles.title}>Jumlah Halaman : {item.jumlahHalaman} </Text>
+      <Text style={styles.title}>Nama Penulis : {item.author} </Text>
+      <TouchableOpacity onPress={() => { this.props.navigation.navigate('UpdateBuku', item) }} style={styles.button}><Text style={styles.title}>Update Buku</Text></TouchableOpacity>
+      <TouchableOpacity onPress={() => {
+        Alert.alert('Anda yakin?', 'Saya sih tidak...',
+          [
+        {text: 'Tidak', onPress:()=> console.warn('NO Pressed'), style: 'cancel'},
+        {text: 'YES', onPress: () => this.deleteData(item.id)},
+      ])
+      }} style={styles.button}><Text style={styles.title}>Delete Buku</Text></TouchableOpacity>
+    </View>
+    )
 
     render() {
-        
-        let temp=[], current
-        for (let x = 0; x < this.props.dataGambar; x++) {
-            for (let y = 0; y < this.props.dataGambar; y++) {
-                document.getElementById(`imgClick`)
-            }
-        }
-         return (
-             <View>
-                
-                <Text>Selamat Datang {JSON.stringify(this.props.userData.username)} </Text>
-                <Image
-                        id="imgClick"
-                        onclick={this.gambarCheck.bind(this)}
-                        source={require('../thumb_up.jpg')} /> 
-            </View>
+        return (
+            <SafeAreaView style={styles.container}>
+                <FlatList
+                   data={this.state.data}
+                renderItem={this.renderItem}
+                keyExtractor={item => item.id}
+            />
+            <TouchableOpacity onPress={() => { this.props.navigation.navigate('AddBuku') }} style={styles.button}><Text style={styles.title}>Tambahkan Buku</Text></TouchableOpacity>
+            {/* <TextInput TextInput placeholder="Cari Buku" onChangeText={(data) => { this.setState({ namaBuku: data }) }} /> */}
+            {/* <TouchableOpacity onPress={ this.getData.bind(this) } style={styles.button}><Text style={styles.title}>Cari Buku</Text></TouchableOpacity> */}
+            </SafeAreaView>
         )
     }
 }
 
-const mapStateToProps = (state) => ({
-    userData: state.RegisterReducer,
-    dataGambar : state.GambarReducer
-})
-
-const mapDispatchToProps = {
-}
-
 const styles = StyleSheet.create({
-    textStyle: {
-        fontSize: 20,
-        padding: 10
+    container: {
+      flex: 1,
+      marginTop: StatusBar.currentHeight || 0,
     },
-    inputStyle: {
-        borderWidth: 10,
-        borderColor: "red",
+    item: {
+      backgroundColor: '#f9c2ff',
+      padding: 20,
+      marginVertical: 8,
+      marginHorizontal: 16,
     },
-    ImgStyle: {
-        maxWidth: '50px'
-    }
-})
+    title: {
+      fontSize: 18,
+    },
+    button: {
+     
+      alignItems: "center",
+      backgroundColor: "#DDDDDD",
+      padding: 10,
+      margin:10,
+    },
+  });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Home)
+export default Home

@@ -4,19 +4,19 @@ import Router from './src/Router/Router';
 import { Provider } from 'react-redux';
 import { store } from './src/Redux/Store';
 
-class App extends Component {
+export class App extends Component {
+  
   render() {
     return (
-      <Provider store={store}>
-        <NavigationContainer>
-          <Router/>
-        </NavigationContainer>
-      </Provider>
+          <Provider store={store}>
+            <NavigationContainer>
+              <Router />              
+            </NavigationContainer>           
+          </Provider>     
     )
   }
 }
-
-
+  
 export default App;
 
 
